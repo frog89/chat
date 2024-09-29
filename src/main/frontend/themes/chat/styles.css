@@ -23,3 +23,20 @@
       --lumo-space-xs: 0.1875rem;
 
     }
+
+.login-panel {
+  background-color: var(--lumo-contrast-5pct);
+  padding: 10px;
+  margin: 50px;
+  border-radius: 8px;
+  width: auto;
+}
+
+.login-btn {
+  margin: 20px 0px 0px 0px;
+}
+
+.signup-buttons vaadin-button {
+  font-size: var(--lumo-font-size-xxs);
+}
+
