@@ -1,10 +1,9 @@
 package com.franka.chat.data.service;
 
 import com.franka.chat.data.entity.ChatSession;
-import com.franka.chat.data.entity.ChatUser;
+import com.franka.chat.data.entity.ChatUserKind;
 import com.franka.chat.data.entity.ChatUserRole;
 import com.franka.chat.data.repository.ChatSessionRepository;
-import com.franka.chat.data.repository.ChatUserRepository;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.spring.security.AuthenticationContext;
@@ -35,9 +34,6 @@ public class AuthService {
     private AuthenticationContext authenticationContext;
 
     @Autowired
-    private ChatUserRepository chatUserRepository;
-
-    @Autowired
     private ChatSessionRepository chatSessionRepository;
 
     public UserDetails getAuthenticatedUser() {
@@ -49,37 +45,53 @@ public class AuthService {
         //authenticationContext.logout();
     }
 
-    public ChatSession authenticate(ChatUser authUser) {
-        boolean userIsInDb = false;
-        if (authUser.getId() != null) {
-          var dbUser = chatUserRepository.findById(authUser.getId());
-          userIsInDb = dbUser.isPresent();
+    private String getNameNotInDb(String name) {
+      String searchName = name;
+      var dbUser = chatSessionRepository.findByName(name);
+      if (dbUser != null) {
+        int i = 0;
+        boolean isInDb = true;
+        while (isInDb) {
+          searchName = name + "-" + ++i;
+          dbUser = chatSessionRepository.findByName(searchName);
+          isInDb = dbUser != null;
         }
-        if (!userIsInDb) {
-          authUser = chatUserRepository.save(authUser);
-        }
-
-        if (userDetailsManager.userExists(authUser.getName())) {
-            userDetailsManager.deleteUser(authUser.getName());
-        }
-        UserDetails userDetails = User.withUsername(authUser.getName()).password("{noop}").roles(ChatUserRole.USER.name()).build();
-        userDetailsManager.createUser(userDetails);
-        configureSecurity(userDetails);
-
-        String ipAddress = VaadinSession.getCurrent().getBrowser().getAddress();
-        List<ChatSession> chatSessionList = chatSessionRepository.findForAuthentication(authUser.getName(), ipAddress);
-        ChatSession session;
-        if (chatSessionList.size() >= 1) {
-            session = chatSessionList.get(0);
-        } else {
-            session = new ChatSession(authUser, ipAddress);
-            chatSessionRepository.save(session);
-        }
-        return session;
+      }
+      return searchName;
     }
 
-    private void configureSecurity(UserDetails userDetails) {
-        List<GrantedAuthority> authorities = new ArrayList<>();
+    public ChatSession authenticate(String loginUserName, ChatUserKind userKind) {
+      String userName;
+      List<ChatSession> existingChatSessions = chatSessionRepository.findForAuthentication(loginUserName, userKind);
+      String ipAddress = VaadinSession.getCurrent().getBrowser().getAddress();
+      ChatSession foundSession = null;
+      for (ChatSession session : existingChatSessions) {
+        if (session.getUserIp().equals(ipAddress)) {
+          foundSession = session;
+          break;
+        }
+      }
+      ChatSession session;
+      if (foundSession != null) {
+        session = foundSession;
+        userName = session.getUserName();
+      } else {
+        userName = getNameNotInDb(loginUserName);
+        session = new ChatSession(userName, userKind, ipAddress);
+        chatSessionRepository.save(session);
+      }
+      configureSecurity(userName);
+      return session;
+    }
+
+    private void configureSecurity(String userName) {
+      if (userDetailsManager.userExists(userName)) {
+        userDetailsManager.deleteUser(userName);
+      }
+      UserDetails userDetails = User.withUsername(userName).password("{noop}").roles(ChatUserRole.USER.name()).build();
+      userDetailsManager.createUser(userDetails);
+
+      List<GrantedAuthority> authorities = new ArrayList<>();
         userDetails.getAuthorities().forEach(a -> {
             authorities.add(new SimpleGrantedAuthority(a.getAuthority()));
         });

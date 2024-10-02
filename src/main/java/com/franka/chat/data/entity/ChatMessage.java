@@ -5,7 +5,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -15,18 +14,12 @@ import java.time.LocalDateTime;
 @Table(name="chat_message")
 public class ChatMessage extends AbstractEntity {
     @ManyToOne(optional = false)
-    @JoinColumn(name="from_chat_user_id")
-    private ChatUser fromChatUser;
-
-    @Min(1)
-    private Long fromChatUserSessionId;
+    @JoinColumn(name="chat_id")
+    private Chat chat;
 
     @ManyToOne(optional = false)
-    @JoinColumn(name="to_chat_user_id")
-    private ChatUser toChatUser;
-
-    @Min(1)
-    private Long toChatUserSessionId;
+    @JoinColumn(name="from_chat_session_id")
+    private ChatSession fromSession;
 
     @NotNull
     private LocalDateTime datetime;
@@ -38,36 +31,27 @@ public class ChatMessage extends AbstractEntity {
         this.datetime = LocalDateTime.now();
     }
 
-    public ChatUser getFromChatUser() {
-        return fromChatUser;
+    public ChatMessage(Chat chat, ChatSession fromSession, String message) {
+        this.chat = chat;
+        this.fromSession = fromSession;
+        this.message = message;
+        this.datetime = LocalDateTime.now();
     }
 
-    public void setFromChatUser(ChatUser fromChatUser) {
-        this.fromChatUser = fromChatUser;
+    public Chat getChat() {
+        return chat;
     }
 
-    public Long getFromChatUserSessionId() {
-        return fromChatUserSessionId;
+    public void setChat(Chat chat) {
+        this.chat = chat;
     }
 
-    public void setFromChatUserSessionId(Long fromChatUserSessionId) {
-        this.fromChatUserSessionId = fromChatUserSessionId;
+    public ChatSession getFromSession() {
+        return fromSession;
     }
 
-    public ChatUser getToChatUser() {
-        return toChatUser;
-    }
-
-    public void setToChatUser(ChatUser toChatUser) {
-        this.toChatUser = toChatUser;
-    }
-
-    public Long getToChatUserSessionId() {
-        return toChatUserSessionId;
-    }
-
-    public void setToChatUserSessionId(Long toChatUserSessionId) {
-        this.toChatUserSessionId = toChatUserSessionId;
+    public void setFromSession(ChatSession fromSession) {
+        this.fromSession = fromSession;
     }
 
     public LocalDateTime getDatetime() {

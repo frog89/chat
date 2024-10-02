@@ -1,69 +1,107 @@
 package com.franka.chat.data.service;
 
+import com.franka.chat.data.ChatSessionAttribute;
+import com.franka.chat.data.entity.Chat;
 import com.franka.chat.data.entity.ChatMessage;
 import com.franka.chat.data.entity.ChatSession;
-import com.franka.chat.data.entity.ChatUser;
 import com.franka.chat.data.entity.ChatUserKind;
+import com.franka.chat.data.entity.ChatUserRole;
 import com.franka.chat.data.repository.ChatMessageRepository;
+import com.franka.chat.data.repository.ChatRepository;
 import com.franka.chat.data.repository.ChatSessionRepository;
-import com.franka.chat.data.repository.ChatUserRepository;
 import com.vaadin.flow.server.VaadinSession;
+import com.vaadin.flow.spring.security.AuthenticationContext;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
 public class ChatService {
-    private ChatUserRepository userRepository;
-    private ChatSessionRepository sessionRepository;
-    private ChatMessageRepository messageRepository;
+  @Autowired
+  private AuthenticationContext authenticationContext;
 
-    @Autowired
-    private HttpServletRequest servletRequest;
+  @Autowired
+  private ChatSessionRepository sessionRepository;
+  @Autowired
+  private ChatMessageRepository messageRepository;
+  @Autowired
+  private ChatRepository chatRepository;
 
-    public ChatService(ChatUserRepository userRepository,
-                       ChatSessionRepository sessionRepository,
-                       ChatMessageRepository messageRepository) {
-        this.userRepository = userRepository;
-        this.sessionRepository = sessionRepository;
-        this.messageRepository = messageRepository;
+  @Autowired
+  private HttpServletRequest servletRequest;
+
+  public List<ChatMessage> findChatMessagesByChatId(Long chatId) {
+    return messageRepository.findByChatId(chatId);
+  }
+
+  public ChatMessage saveChatMessage(ChatMessage msg) {
+    return messageRepository.save(msg);
+  }
+
+  public List<ChatSession> findAllSessions(String userName) {
+    if (userName == null || userName.isEmpty()) {
+      return sessionRepository.findAll();
+    } else {
+      return sessionRepository.searchUserNameIgnoreCase(userName);
+    }
+  }
+
+  @PostConstruct
+  public void generateUsers() {
+    if (VaadinSession.getCurrent() != null) {
+      VaadinSession.getCurrent().getSession().invalidate();
     }
 
-    public List<ChatUser> findAllUsers(String stringFilter) {
-        if (stringFilter == null || stringFilter.isEmpty()) {
-            return userRepository.findAll();
-        } else {
-            return userRepository.search(stringFilter);
-        }
+    String ipAddress = "0:0:0:0:0:0:0:1";
+    ChatSession frank = new ChatSession("Frank", ChatUserKind.MALE, ipAddress);
+    frank.setUserRole(ChatUserRole.ADMIN);
+    ChatSession klaudia = new ChatSession("Klaudia", ChatUserKind.FEMALE, ipAddress);
+    ChatSession jan = new ChatSession("Jan", ChatUserKind.MALE, ipAddress);
+    ChatSession svenja = new ChatSession("Svenja", ChatUserKind.FEMALE, ipAddress);
+    ChatSession nick = new ChatSession("Nick", ChatUserKind.UNKNOWN, ipAddress);
+
+    List<ChatSession> sessions = Stream.of(frank, klaudia, jan, svenja, nick).collect(Collectors.toList());
+    if (sessionRepository.count() == 0) {
+      sessionRepository.saveAll(sessions);
     }
+  }
 
-    public long userCount() {
-        return userRepository.count();
-    }
+  public ChatSession getCurrentSession() {
+    return (ChatSession)VaadinSession.getCurrent().getAttribute(ChatSessionAttribute.CURRENT_CHAT_SESSION.name());
+  }
 
-    public List<ChatMessage> findAllChatMessages() {
-        return messageRepository.findAll();
-    }
+  public List<Chat> findAllChats() {
+    return chatRepository.findAll();
+  }
 
-    @PostConstruct
-    public void generateUsers() {
-        ChatUser frank = new ChatUser("Frank", ChatUserKind.MALE);
-        ChatUser klaudia = new ChatUser("Klaudia", ChatUserKind.FEMALE);
-        ChatUser jan = new ChatUser("Jan", ChatUserKind.MALE);
-        ChatUser svenja = new ChatUser("Svenja", ChatUserKind.FEMALE);
-        ChatUser nick = new ChatUser("Nick", ChatUserKind.UNKNOWN);
+  public Optional<Chat> findChatById(Long chatId) {
+    return chatRepository.findById(chatId);
+  }
 
-        List<ChatUser> users = Stream.of(frank, klaudia, jan, svenja, nick).collect(Collectors.toList());
-        if (userRepository.count() == 0) {
-            userRepository.saveAll(users);
-        }
-    }
+  public List<Chat> findChatBySessionIds(Long firstSessionId, Long secondSessionId) {
+    return chatRepository.findChatBySessionIds(firstSessionId, secondSessionId);
+  }
 
+  public List<Chat> findChatsBySessionId(Long sessionId) {
+    return chatRepository.findChatsBySessionId(sessionId);
+  }
+
+  public void saveChat(Chat chat) {
+    chatRepository.save(chat);
+  }
+
+  public void deleteChat(Chat chat) {
+    chatRepository.delete(chat);
+  }
+
+
+    /*
     public void generateSessions() {
         List<ChatUser> users = userRepository.findAll();
         String ipAddress = VaadinSession.getCurrent().getBrowser().getAddress();
@@ -117,4 +155,5 @@ public class ChatService {
             );
         }
     }
+    */
 }

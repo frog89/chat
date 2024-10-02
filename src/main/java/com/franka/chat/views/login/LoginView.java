@@ -1,7 +1,7 @@
 package com.franka.chat.views.login;
 
+import com.franka.chat.data.ChatSessionAttribute;
 import com.franka.chat.data.entity.ChatSession;
-import com.franka.chat.data.entity.ChatUser;
 import com.franka.chat.data.entity.ChatUserKind;
 import com.franka.chat.data.service.AuthService;
 import com.franka.chat.util.NotificationUtil;
@@ -16,6 +16,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -81,9 +82,9 @@ public class LoginView extends VerticalLayout {
                 }
                 String trimmedUsername = usernameField.getValue().trim();
                 var conv = new ChatUserKind.Converter();
-                ChatUser authUser = new ChatUser(trimmedUsername, conv.convertToEntityAttribute(userKindField.getValue()));
-                ChatSession session = authService.authenticate(authUser);
-                UI.getCurrent().navigate("user");
+                ChatSession chatSession = authService.authenticate(trimmedUsername, conv.convertToEntityAttribute(userKindField.getValue()));
+                VaadinSession.getCurrent().setAttribute(ChatSessionAttribute.CURRENT_CHAT_SESSION.name(), chatSession);
+                UI.getCurrent().navigate("session");
             } catch (Throwable ex) {
                 NotificationUtil.showClosableError("Login failed: " + ex.getMessage());
             }

@@ -12,8 +12,16 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 
 public class NotificationUtil {
     public static void showClosableError(String text) {
+        showClosableMessage(text, NotificationVariant.LUMO_ERROR);
+    }
+
+    public static void showClosableInfo(String text) {
+        showClosableMessage(text, NotificationVariant.LUMO_PRIMARY);
+    }
+
+    private static void showClosableMessage(String text, NotificationVariant variant) {
         Notification notification = new Notification();
-        notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+        notification.addThemeVariants(variant);
 
         Div textDiv = new Div(new Text(text));
 
