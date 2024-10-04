@@ -5,6 +5,7 @@ import com.franka.chat.data.entity.ChatSession;
 import com.franka.chat.data.entity.ChatUserKind;
 import com.franka.chat.data.service.AuthService;
 import com.franka.chat.util.NotificationUtil;
+import com.franka.chat.views.MainLayout;
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
@@ -84,7 +85,7 @@ public class LoginView extends VerticalLayout {
                 var conv = new ChatUserKind.Converter();
                 ChatSession chatSession = authService.authenticate(trimmedUsername, conv.convertToEntityAttribute(userKindField.getValue()));
                 VaadinSession.getCurrent().setAttribute(ChatSessionAttribute.CURRENT_CHAT_SESSION.name(), chatSession);
-                UI.getCurrent().navigate("session");
+                UI.getCurrent().navigate(MainLayout.SESSIONS_ROUTE);
             } catch (Throwable ex) {
                 NotificationUtil.showClosableError("Login failed: " + ex.getMessage());
             }

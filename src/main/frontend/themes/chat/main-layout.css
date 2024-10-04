@@ -1,4 +1,3 @@
-@import "session-user-colors.css"
 
 vaadin-scroller[slot="drawer"] {
   padding: var(--lumo-space-s);
@@ -34,4 +33,17 @@ vaadin-side-nav-item::part(link) {
 }
 vaadin-side-nav-item vaadin-horizontal-layout {
   gap: 3px;
+}
+
+vaadin-side-nav-item.user_male {
+  color: blue;
+}
+vaadin-side-nav-item.user_female {
+  color: orange;
+}
+vaadin-side-nav-item.user_couple {
+  color: green;
+}
+vaadin-side-nav-item.user_unknown {
+  color: purple;
 }

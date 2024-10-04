@@ -21,6 +21,9 @@ CREATE TABLE `chat` (
 	`id` BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
 	`first_chat_session_id` BIGINT(20) UNSIGNED NOT NULL,
 	`second_chat_session_id` BIGINT(20) UNSIGNED NOT NULL,
+	`is_hidden_for_first_chat_session` ENUM('Y','N') NULL DEFAULT 'N',
+	`is_hidden_for_second_chat_session` ENUM('Y','N') NULL DEFAULT 'N',
+	`last_seen_message_id` BIGINT(20) UNSIGNED NOT NULL DEFAULT 0,
 	`start_datetime` DATETIME NOT NULL,
 	PRIMARY KEY (`id`) USING BTREE
 )

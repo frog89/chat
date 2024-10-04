@@ -9,6 +9,7 @@ import com.franka.chat.data.entity.ChatUserRole;
 import com.franka.chat.data.repository.ChatMessageRepository;
 import com.franka.chat.data.repository.ChatRepository;
 import com.franka.chat.data.repository.ChatSessionRepository;
+import com.franka.chat.views.MainLayout;
 import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.spring.security.AuthenticationContext;
 import jakarta.annotation.PostConstruct;
@@ -45,11 +46,16 @@ public class ChatService {
   }
 
   public List<ChatSession> findAllSessions(String userName) {
+    Long currentSessionId = getCurrentSession().getId();
+    ChatSession thisSession = sessionRepository.findById(currentSessionId).get();
+    List<ChatSession> otherSessions;
     if (userName == null || userName.isEmpty()) {
-      return sessionRepository.findAll();
+      otherSessions = sessionRepository.findAllOrdered(currentSessionId);
     } else {
-      return sessionRepository.searchUserNameIgnoreCase(userName);
+      otherSessions = sessionRepository.findUserNameIgnoreCaseOrdered(currentSessionId, userName);
     }
+    return Stream.concat(Stream.of(thisSession), otherSessions.stream())
+                                  .collect(Collectors.toList());
   }
 
   @PostConstruct
@@ -76,6 +82,14 @@ public class ChatService {
     return (ChatSession)VaadinSession.getCurrent().getAttribute(ChatSessionAttribute.CURRENT_CHAT_SESSION.name());
   }
 
+  public MainLayout getMainLayout() {
+    return (MainLayout)VaadinSession.getCurrent().getAttribute(ChatSessionAttribute.MAIN_LAYOUT.name());
+  }
+
+  public void setMainLayout(MainLayout mainLayout) {
+    VaadinSession.getCurrent().setAttribute(ChatSessionAttribute.MAIN_LAYOUT.name(), mainLayout);
+  }
+
   public List<Chat> findAllChats() {
     return chatRepository.findAll();
   }
@@ -92,8 +106,8 @@ public class ChatService {
     return chatRepository.findChatsBySessionId(sessionId);
   }
 
-  public void saveChat(Chat chat) {
-    chatRepository.save(chat);
+  public Chat saveChat(Chat chat) {
+    return chatRepository.save(chat);
   }
 
   public void deleteChat(Chat chat) {

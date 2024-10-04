@@ -18,8 +18,16 @@ public interface ChatSessionRepository extends JpaRepository<ChatSession, Long> 
       @Param("userKind") ChatUserKind userKind);
 
     @Query(value = "select s from ChatSession s " +
-      "where lower(s.userName) like lower(concat('%', :userName, '%'))")
-    List<ChatSession> searchUserNameIgnoreCase(@Param("userName") String userName);
+      "where s.id <> :currentSessionId and " +
+      "lower(s.userName) like lower(concat('%', :filterUserName, '%')) " +
+      "order by userName asc")
+    List<ChatSession> findUserNameIgnoreCaseOrdered(@Param("currentSessionId") Long currentSessionId,
+      @Param("filterUserName") String filterUserName);
+
+    @Query(value = "select s from ChatSession s " +
+                   "where s.id <> :currentSessionId " +
+                   "order by s.userName asc")
+    List<ChatSession> findAllOrdered(@Param("currentSessionId") Long currentSessionId);
 
     @Query(value = "select s from ChatSession s " +
                    "where s.userName = :userName")

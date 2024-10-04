@@ -11,7 +11,7 @@ import com.vaadin.flow.theme.lumo.LumoUtility.Margin;
 import jakarta.annotation.security.PermitAll;
 
 @PageTitle("Info")
-@Route(value = "info", layout = MainLayout.class)
+@Route(value = MainLayout.INFO_ROUTE, layout = MainLayout.class)
 @PermitAll
 public class InfoView extends VerticalLayout {
 

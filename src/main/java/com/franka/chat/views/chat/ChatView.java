@@ -3,14 +3,13 @@ package com.franka.chat.views.chat;
 import com.franka.chat.data.entity.Chat;
 import com.franka.chat.data.entity.ChatMessage;
 import com.franka.chat.data.entity.ChatSession;
+import com.franka.chat.data.model.ChatBroadcastInfo;
+import com.franka.chat.data.model.ChatSideNavItem;
 import com.franka.chat.data.service.ChatService;
-import com.franka.chat.util.ChatMessageListBroadcasterUtil;
+import com.franka.chat.util.ChatBroadcasterUtil;
 import com.franka.chat.util.NotificationUtil;
 import com.franka.chat.views.MainLayout;
-import com.vaadin.flow.component.AttachEvent;
-import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.Key;
-import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
@@ -21,19 +20,18 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.shared.Registration;
 import jakarta.annotation.security.PermitAll;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @PageTitle("Chat")
-@Route(value = "chat/:chatId", layout = MainLayout.class)
+@Route(value = MainLayout.CHAT_ROUTE + "/:chatId", layout = MainLayout.class)
 @PermitAll
 public class ChatView extends VerticalLayout implements BeforeEnterObserver {
     private DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    private Registration broadcasterRegistration;
     private Grid<ChatMessage> grid = new Grid<>(ChatMessage.class);
+
     private Chat chat;
 
     private ChatService chatService;
@@ -47,11 +45,14 @@ public class ChatView extends VerticalLayout implements BeforeEnterObserver {
         TextField messageField = new TextField("Message");
         Button sendBtn = new Button("Send", event -> {
             try {
-                ChatSession session = chatService.getCurrentSession();
-                ChatMessage msg = new ChatMessage(this.chat, session, messageField.getValue());
-                chatService.saveChatMessage(msg);
+                ChatSession currentSession = chatService.getCurrentSession();
+                ChatMessage msg = new ChatMessage(this.chat, currentSession, messageField.getValue());
+                msg = chatService.saveChatMessage(msg);
+                this.chat.setLastSeenMessageId(msg.getId());
+                chatService.saveChat(this.chat);
                 List<ChatMessage> msgList = loadMessages();
-                ChatMessageListBroadcasterUtil.broadcast(msgList);
+                ChatBroadcastInfo info = new ChatBroadcastInfo(currentSession, this.chat, msgList);
+                ChatBroadcasterUtil.broadcast(info);
                 messageField.setValue("");
             } catch (Exception ex) {
                 NotificationUtil.showClosableError(ex.getMessage());
@@ -68,7 +69,7 @@ public class ChatView extends VerticalLayout implements BeforeEnterObserver {
 
         headerArea.getStyle().set("height", "auto");
         headerArea.getStyle().set("flex-grow", "0");
-        grid.getStyle().set("flex-grow", "1");
+        this.grid.getStyle().set("flex-grow", "1");
 
         configureGrid();
         add(
@@ -82,39 +83,35 @@ public class ChatView extends VerticalLayout implements BeforeEnterObserver {
         String chatIdString = event.getRouteParameters().get("chatId").get();
         this.chat = chatService.findChatById(Long.valueOf(chatIdString)).get();
         List<ChatMessage> msgList = loadMessages();
+
+        MainLayout mainLayout = this.chatService.getMainLayout();
+        ChatSideNavItem navItem = mainLayout.findSideNavItem(this.chat);
+        if (navItem != null) {
+            navItem.setSpeakIconVisibility(false);
+        }
         addToGrid(msgList);
     }
 
-    @Override
-    protected void onAttach(AttachEvent attachEvent) {
-        UI ui = attachEvent.getUI();
-        broadcasterRegistration = ChatMessageListBroadcasterUtil.register(newChatList -> {
-            ui.access(() -> addToGrid(newChatList));
-        });
-    }
-
-    @Override
-    protected void onDetach(DetachEvent detachEvent) {
-        broadcasterRegistration.remove();
-        broadcasterRegistration = null;
+    public Chat getChat() {
+        return chat;
     }
 
     private List<ChatMessage> loadMessages() {
         return chatService.findChatMessagesByChatId(this.chat.getId());
     }
 
-    private void addToGrid(List<ChatMessage> messageList) {
-        grid.setItems(messageList);
+    public void addToGrid(List<ChatMessage> messageList) {
+        this.chat.setLastSeenMessageId(messageList == null || messageList.isEmpty() ? 0L : messageList.getFirst().getId());
+        this.grid.setItems(messageList);
     }
 
     private void configureGrid() {
-        grid.addClassName("message-grid");
-        grid.addThemeVariants(GridVariant.LUMO_COMPACT);
-        grid.setSizeFull();
-        grid.setColumns();
-        ChatSession currentSession = chatService.getCurrentSession();
-        grid.addColumn(msg -> msg.getChat().getOtherSession(currentSession).getUserName()).setHeader("From").setWidth("12%").setResizable(true);
-        grid.addColumn(msg -> dateFormatter.format(msg.getDatetime())).setHeader("Date").setWidth("13%").setResizable(true);
-        grid.addColumn(ChatMessage::getMessage).setHeader("Message").setWidth("75%").setResizable(true);
+        this.grid.addClassName("message-grid");
+        this.grid.addThemeVariants(GridVariant.LUMO_COMPACT);
+        this.grid.setSizeFull();
+        this.grid.setColumns();
+        this.grid.addColumn(msg -> msg.getFromSession().getUserName()).setHeader("From").setWidth("12%").setResizable(true);
+        this.grid.addColumn(msg -> dateFormatter.format(msg.getDatetime())).setHeader("Date").setWidth("13%").setResizable(true);
+        this.grid.addColumn(ChatMessage::getMessage).setHeader("Message").setWidth("75%").setResizable(true);
     }
 }
