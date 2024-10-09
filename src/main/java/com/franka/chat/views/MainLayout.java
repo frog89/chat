@@ -7,9 +7,6 @@ import com.franka.chat.data.service.AuthService;
 import com.franka.chat.data.service.ChatService;
 import com.franka.chat.util.ChatBroadcasterUtil;
 import com.franka.chat.util.NotificationUtil;
-import com.franka.chat.views.chat.ChatView;
-import com.franka.chat.views.info.InfoView;
-import com.franka.chat.views.session.SessionView;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.HasElement;
@@ -46,13 +43,20 @@ import java.util.List;
 //@PreserveOnRefresh
 @CssImport(value = "./themes/chat/session-grid.css")
 public class MainLayout extends AppLayout implements AfterNavigationObserver {
-    public static final String INFO_LABEL_ID = "@Info_ID@";
+    public static final String LOGIN_LABEL = "Einloggen";
+    public static final String LOGIN_ROUTE = "login";
+
+    public static final String INFO_ID = "@Info_ID@";
     public static final String INFO_LABEL = "Info";
     public static final String INFO_ROUTE = "info";
 
-    public static final String SESSIONS_LABEL_ID = "@Sessions_ID@";
+    public static final String SESSIONS_ID = "@Sessions_ID@";
     public static final String SESSIONS_LABEL = "Sessions";
     public static final String SESSIONS_ROUTE = "sessions";
+
+    public static final String HIDDEN_CHATS_ID = "@HiddenChats_ID@";
+    public static final String HIDDEN_CHATS_LABEL = "Versteckte Chats";
+    public static final String HIDDEN_CHATS_ROUTE = "hidden-chats";
 
     public static final String CHAT_LABEL = "Chat";
     public static final String CHAT_ROUTE = "chat";
@@ -82,7 +86,7 @@ public class MainLayout extends AppLayout implements AfterNavigationObserver {
     @Override
     public void afterNavigation(AfterNavigationEvent event) {
         this.activeView = event.getActiveChain().get(0);
-        System.out.println("Active View: " + this.activeView.toString());
+        //System.out.println("Active View: " + this.activeView.toString());
         viewTitle.setText(getCurrentPageTitle());
     }
 
@@ -95,7 +99,7 @@ public class MainLayout extends AppLayout implements AfterNavigationObserver {
             ChatView chatView =  (ChatView)activeView;
             ChatSession currentSession = this.chatService.getCurrentSession();
             ChatSession otherSession = chatView.getChat().getOtherSession(currentSession);
-            title = String.format("%s with %s", title, otherSession.getUserName());
+            title = String.format("%s mit %s", title, otherSession.getUserName());
         }
         return title;
     }
@@ -161,7 +165,7 @@ public class MainLayout extends AppLayout implements AfterNavigationObserver {
     public ChatSideNavItem findSideNavItem(Chat chat) {
         List<SideNavItem> foundNavItemList = this.sideNav.getItems().stream().filter(sni -> {
             String sideNavItemIdString = sni.getId().get();
-            if (sideNavItemIdString.equals(SESSIONS_LABEL_ID) || sideNavItemIdString.equals(INFO_LABEL_ID)) {
+            if (sideNavItemIdString.equals(SESSIONS_ID) || sideNavItemIdString.equals(HIDDEN_CHATS_ID) || sideNavItemIdString.equals(INFO_ID)) {
                 return false;
             }
             Long sideNavItemId = Long.valueOf(sideNavItemIdString);
@@ -211,10 +215,15 @@ public class MainLayout extends AppLayout implements AfterNavigationObserver {
 
     private void fillSideNav() {
         SideNavItem sessionsItem = new SideNavItem(SESSIONS_LABEL, SessionView.class, LineAwesomeIcon.USER_ALT_SOLID.create());
-        sessionsItem.setId(SESSIONS_LABEL_ID);
+        sessionsItem.setId(SESSIONS_ID);
         this.sideNav.addItem(sessionsItem);
+
+        SideNavItem hiddenChatsItem = new SideNavItem(HIDDEN_CHATS_LABEL, HiddenChatsView.class, LineAwesomeIcon.MASK_SOLID.create());
+        hiddenChatsItem.setId(HIDDEN_CHATS_ID);
+        this.sideNav.addItem(hiddenChatsItem);
+
         SideNavItem infoItem = new SideNavItem(INFO_LABEL, InfoView.class, LineAwesomeIcon.INFO_CIRCLE_SOLID.create());
-        infoItem.setId(INFO_LABEL_ID);
+        infoItem.setId(INFO_ID);
         this.sideNav.addItem(infoItem);
         refreshChats();
     }
@@ -223,7 +232,7 @@ public class MainLayout extends AppLayout implements AfterNavigationObserver {
         List<SideNavItem> chatItemsToRemove = new ArrayList<>();
         this.sideNav.getItems().forEach(ni -> {
             String niId = ni.getId().get();
-            if (SESSIONS_LABEL_ID.equals(niId) || INFO_LABEL_ID.equals(niId)) {
+            if (SESSIONS_ID.equals(niId) || HIDDEN_CHATS_ID.equals(niId) || INFO_ID.equals(niId)) {
                 return;
             }
             chatItemsToRemove.add(ni);

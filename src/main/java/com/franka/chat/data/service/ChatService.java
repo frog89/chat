@@ -9,6 +9,7 @@ import com.franka.chat.data.entity.ChatUserRole;
 import com.franka.chat.data.repository.ChatMessageRepository;
 import com.franka.chat.data.repository.ChatRepository;
 import com.franka.chat.data.repository.ChatSessionRepository;
+import com.franka.chat.util.CryptUtil;
 import com.franka.chat.views.MainLayout;
 import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.spring.security.AuthenticationContext;
@@ -17,6 +18,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -59,22 +63,68 @@ public class ChatService {
   }
 
   @PostConstruct
-  public void generateUsers() {
+  public void generateData() throws NoSuchAlgorithmException, InvalidKeySpecException {
     if (VaadinSession.getCurrent() != null) {
       VaadinSession.getCurrent().getSession().invalidate();
+      return;
     }
 
-    String ipAddress = "0:0:0:0:0:0:0:1";
-    ChatSession frank = new ChatSession("Frank", ChatUserKind.MALE, ipAddress);
+    //if (sessionRepository.count() > 0) {
+    //  return;
+    //}
+
+    deleteAllData();
+
+    String passwordHash = CryptUtil.getHashString("p");
+    ChatSession frank = new ChatSession("Frank", ChatUserKind.MALE, passwordHash);
     frank.setUserRole(ChatUserRole.ADMIN);
-    ChatSession klaudia = new ChatSession("Klaudia", ChatUserKind.FEMALE, ipAddress);
-    ChatSession jan = new ChatSession("Jan", ChatUserKind.MALE, ipAddress);
-    ChatSession svenja = new ChatSession("Svenja", ChatUserKind.FEMALE, ipAddress);
-    ChatSession nick = new ChatSession("Nick", ChatUserKind.UNKNOWN, ipAddress);
+    ChatSession klaudia = new ChatSession("Klaudia", ChatUserKind.FEMALE, passwordHash);
+    ChatSession jan = new ChatSession("Jan", ChatUserKind.MALE, passwordHash);
+    ChatSession svenja = new ChatSession("Svenja", ChatUserKind.FEMALE, passwordHash);
+    ChatSession nick = new ChatSession("Nick", ChatUserKind.UNKNOWN, passwordHash);
 
     List<ChatSession> sessions = Stream.of(frank, klaudia, jan, svenja, nick).collect(Collectors.toList());
-    if (sessionRepository.count() == 0) {
-      sessionRepository.saveAll(sessions);
+    sessionRepository.saveAll(sessions);
+
+    List<ChatSession> moreSessions = new ArrayList<>();
+    List<Chat> chats = new ArrayList<>();
+    List<ChatMessage> messages = new ArrayList<>();
+    for (int i=0; i < 100; i++) {
+      ChatSession man = new ChatSession("Man " + i, ChatUserKind.MALE, passwordHash);
+      moreSessions.add(man);
+      ChatSession woman = new ChatSession("Woman " + i, ChatUserKind.FEMALE, passwordHash);
+      moreSessions.add(woman);
+      Chat chat = new Chat(man, woman);
+      chats.add(chat);
+      for (int j = 0; j < 10; j++) {
+        ChatSession fromSession;
+        ChatSession toSession;
+        if (j % 2 == 0) {
+          fromSession = man;
+          toSession = woman;
+        } else {
+          fromSession = woman;
+          toSession = man;
+        }
+        ChatMessage msg = new ChatMessage(chat, fromSession,
+            String.format("%s to %s: Bla blub %d!", fromSession.getUserName(), toSession.getUserName(), j));
+        messages.add(msg);
+      }
+    }
+    sessionRepository.saveAll(moreSessions);
+    chatRepository.saveAll(chats);
+    messageRepository.saveAll(messages);
+  }
+
+  public void deleteAllData() {
+    if (messageRepository.count() > 0) {
+      messageRepository.deleteAll();
+    }
+    if (chatRepository.count() == 0) {
+      chatRepository.deleteAll();
+    }
+    if (sessionRepository.count() > 0) {
+      sessionRepository.deleteAll();
     }
   }
 
@@ -104,6 +154,10 @@ public class ChatService {
 
   public List<Chat> findChatsBySessionId(Long sessionId) {
     return chatRepository.findChatsBySessionId(sessionId);
+  }
+
+  public List<Chat> findHiddenChats() {
+    return chatRepository.findHiddenChats(getCurrentSession().getId());
   }
 
   public Chat saveChat(Chat chat) {

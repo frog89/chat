@@ -11,6 +11,6 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
 
   @Query(value = "select m from ChatMessage m where " +
                  "m.chat.id = :chatId " +
-                 "order by m.datetime desc")
+                 "order by m.id desc")
   List<ChatMessage> findByChatId(@Param("chatId") Long chatId);
 }

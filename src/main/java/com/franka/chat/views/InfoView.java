@@ -1,6 +1,5 @@
-package com.franka.chat.views.info;
+package com.franka.chat.views;
 
-import com.franka.chat.views.MainLayout;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Paragraph;
@@ -10,7 +9,7 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility.Margin;
 import jakarta.annotation.security.PermitAll;
 
-@PageTitle("Info")
+@PageTitle(MainLayout.INFO_LABEL)
 @Route(value = MainLayout.INFO_ROUTE, layout = MainLayout.class)
 @PermitAll
 public class InfoView extends VerticalLayout {

@@ -1,11 +1,10 @@
-package com.franka.chat.views.login;
+package com.franka.chat.views;
 
 import com.franka.chat.data.ChatSessionAttribute;
 import com.franka.chat.data.entity.ChatSession;
 import com.franka.chat.data.entity.ChatUserKind;
 import com.franka.chat.data.service.AuthService;
 import com.franka.chat.util.NotificationUtil;
-import com.franka.chat.views.MainLayout;
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
@@ -14,6 +13,7 @@ import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -24,11 +24,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.ArrayList;
 import java.util.List;
 
-@Route("login")
-@PageTitle("Login")
+@PageTitle(MainLayout.LOGIN_LABEL)
+@Route(MainLayout.LOGIN_ROUTE)
 @AnonymousAllowed
 public class LoginView extends VerticalLayout {
     private TextField usernameField;
+    private PasswordField passwordField;
     private ComboBox<String> userKindField;
     private Button loginBtn;
 
@@ -38,6 +39,7 @@ public class LoginView extends VerticalLayout {
     public LoginView() {
         createUsernameField();
         createUserKindField();
+        createPasswordField();
         createLoginButton();
 
         Div div = new Div();
@@ -46,6 +48,7 @@ public class LoginView extends VerticalLayout {
           new H1("Chat Login"),
           this.usernameField,
           this.userKindField,
+          this.passwordField,
           this.loginBtn
         );
         add(
@@ -57,13 +60,18 @@ public class LoginView extends VerticalLayout {
         setJustifyContentMode(JustifyContentMode.CENTER);
     }
 
+    private void createPasswordField() {
+        this.passwordField = new PasswordField("Passwort");
+        this.passwordField.setWidthFull();
+    }
+
     private void createUsernameField() {
-        this.usernameField = new TextField("Username");
+        this.usernameField = new TextField("Nutzername");
         this.usernameField.setWidthFull();
     }
 
     private void createUserKindField() {
-        userKindField = new ComboBox<>("User Kind");
+        userKindField = new ComboBox<>("Nutzer Art");
         userKindField.setWidthFull();
         List<String> kindValues = new ArrayList<>();
         for (var kind : ChatUserKind.values()) {
@@ -78,12 +86,21 @@ public class LoginView extends VerticalLayout {
         this.loginBtn = new Button("Login", event -> {
             try {
                 if (usernameField.getValue().isBlank()) {
-                    NotificationUtil.showClosableError("Please enter a name!");
+                    NotificationUtil.showClosableError("Bitte Nutzername eingeben!");
                     return;
                 }
-                String trimmedUsername = usernameField.getValue().trim();
+                if (passwordField.getValue().isBlank()) {
+                    NotificationUtil.showClosableError("Bitte Passwort eingeben!");
+                    return;
+                }
+                String trimmedUsername = this.usernameField.getValue().trim();
+                String trimmedPassword = this.passwordField.getValue().trim();
                 var conv = new ChatUserKind.Converter();
-                ChatSession chatSession = authService.authenticate(trimmedUsername, conv.convertToEntityAttribute(userKindField.getValue()));
+                ChatSession chatSession = authService.authenticate(
+                    trimmedUsername,
+                    conv.convertToEntityAttribute(userKindField.getValue()),
+                    trimmedPassword
+                );
                 VaadinSession.getCurrent().setAttribute(ChatSessionAttribute.CURRENT_CHAT_SESSION.name(), chatSession);
                 UI.getCurrent().navigate(MainLayout.SESSIONS_ROUTE);
             } catch (Throwable ex) {

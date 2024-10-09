@@ -8,6 +8,8 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.time.LocalDateTime;
 
 @Entity
@@ -26,8 +28,8 @@ public class ChatSession extends AbstractEntity {
     private ChatUserRole userRole;
 
     @NotBlank
-    @Column(name = "chat_user_ip")
-    private String userIp;
+    @Column(name = "pwd_hash")
+    private String pwdHash;
 
     @NotNull
     @Column(name = "start_time")
@@ -40,16 +42,15 @@ public class ChatSession extends AbstractEntity {
     @Column(name = "status")
     private SessionStatus status;
 
-    public ChatSession() {
-        this.startTime = LocalDateTime.now();
-        this.status = SessionStatus.ACTIVE;
+    public ChatSession() throws NoSuchAlgorithmException, InvalidKeySpecException {
+        this(null, ChatUserKind.UNKNOWN, null);
     }
 
-    public ChatSession(String userName, ChatUserKind userKind, String userIp) {
+    public ChatSession(String userName, ChatUserKind userKind, String passwordHash) throws NoSuchAlgorithmException, InvalidKeySpecException {
         this.userName = userName;
         this.userKind = userKind;
         this.userRole = ChatUserRole.USER;
-        this.userIp = userIp;
+        this.pwdHash = passwordHash;
         this.startTime = LocalDateTime.now();
         this.status = SessionStatus.ACTIVE;
     }
@@ -78,12 +79,12 @@ public class ChatSession extends AbstractEntity {
         this.userRole = userRole;
     }
 
-    public String getUserIp() {
-        return userIp;
+    public @NotBlank String getPwdHash() {
+        return pwdHash;
     }
 
-    public void setUserIp(String userIp) {
-        this.userIp = userIp;
+    public void setPwdHash(@NotBlank String pwdHash) {
+        this.pwdHash = pwdHash;
     }
 
     public LocalDateTime getStartTime() {

@@ -4,6 +4,7 @@ import com.franka.chat.data.entity.ChatSession;
 import com.franka.chat.data.entity.ChatUserKind;
 import com.franka.chat.data.entity.ChatUserRole;
 import com.franka.chat.data.repository.ChatSessionRepository;
+import com.franka.chat.util.CryptUtil;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.spring.security.AuthenticationContext;
@@ -19,6 +20,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.stereotype.Service;
 
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -60,28 +63,28 @@ public class AuthService {
       return searchName;
     }
 
-    public ChatSession authenticate(String loginUserName, ChatUserKind userKind) {
-      String userName;
-      List<ChatSession> existingChatSessions = chatSessionRepository.findForAuthentication(loginUserName, userKind);
-      String ipAddress = VaadinSession.getCurrent().getBrowser().getAddress();
-      ChatSession foundSession = null;
-      for (ChatSession session : existingChatSessions) {
-        if (session.getUserIp().equals(ipAddress)) {
-          foundSession = session;
-          break;
+    public ChatSession authenticate(String loginUserName, ChatUserKind userKind, String password) throws NoSuchAlgorithmException, InvalidKeySpecException {
+        String passwordHash = CryptUtil.getHashString(password);
+        String userName;
+        List<ChatSession> existingChatSessions = chatSessionRepository.findForAuthentication(loginUserName, userKind);
+        ChatSession foundSession = null;
+        for (ChatSession session : existingChatSessions) {
+            if (CryptUtil.comparePassword(password, session.getPwdHash())) {
+                foundSession = session;
+                break;
+            }
         }
-      }
-      ChatSession session;
-      if (foundSession != null) {
-        session = foundSession;
-        userName = session.getUserName();
-      } else {
-        userName = getNameNotInDb(loginUserName);
-        session = new ChatSession(userName, userKind, ipAddress);
-        chatSessionRepository.save(session);
-      }
-      configureSecurity(userName);
-      return session;
+        ChatSession session;
+        if (foundSession != null) {
+            session = foundSession;
+            userName = session.getUserName();
+        } else {
+            userName = getNameNotInDb(loginUserName);
+            session = new ChatSession(userName, userKind, passwordHash);
+            chatSessionRepository.save(session);
+        }
+        configureSecurity(userName);
+        return session;
     }
 
     private void configureSecurity(String userName) {

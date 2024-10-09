@@ -1,6 +1,6 @@
 package com.franka.chat.security;
 
-import com.franka.chat.views.login.LoginView;
+import com.franka.chat.views.LoginView;
 import com.vaadin.flow.spring.security.VaadinWebSecurity;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

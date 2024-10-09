@@ -1,4 +1,4 @@
-package com.franka.chat.views.chat;
+package com.franka.chat.views;
 
 import com.franka.chat.data.entity.Chat;
 import com.franka.chat.data.entity.ChatMessage;
@@ -8,7 +8,6 @@ import com.franka.chat.data.model.ChatSideNavItem;
 import com.franka.chat.data.service.ChatService;
 import com.franka.chat.util.ChatBroadcasterUtil;
 import com.franka.chat.util.NotificationUtil;
-import com.franka.chat.views.MainLayout;
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
@@ -25,7 +24,7 @@ import jakarta.annotation.security.PermitAll;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-@PageTitle("Chat")
+@PageTitle(MainLayout.CHAT_LABEL)
 @Route(value = MainLayout.CHAT_ROUTE + "/:chatId", layout = MainLayout.class)
 @PermitAll
 public class ChatView extends VerticalLayout implements BeforeEnterObserver {
