@@ -1,0 +1,17 @@
+td.user_male {
+  color: blue;
+}
+td.user_female {
+  color: orange;
+}
+td.user_couple {
+  color: green;
+}
+td.user_unknown {
+  color: purple;
+}
+
+vaadin-grid vaadin-button {
+  --lumo-button-size: 0px;
+  height: 15px;
+}
