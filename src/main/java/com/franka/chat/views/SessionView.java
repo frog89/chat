@@ -9,9 +9,9 @@ import com.franka.chat.util.NotificationUtil;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
@@ -25,7 +25,6 @@ import java.util.List;
 @PageTitle(MainLayout.SESSIONS_LABEL)
 @Route(value = MainLayout.SESSIONS_ROUTE, layout = MainLayout.class)
 @RolesAllowed("ROLE_USER")
-@CssImport(themeFor = "vaadin-grid", value = "./themes/chat/session-grid.css")
 public class SessionView extends VerticalLayout {
     private Grid<ChatSession> grid = new Grid<>(ChatSession.class);
     TextField filterText = new TextField();
@@ -77,7 +76,7 @@ public class SessionView extends VerticalLayout {
             button.addClickListener(event -> {
                 MainLayout layout = this.chatService.getMainLayout();
                 List<Chat> chats = this.chatService.findChatBySessionIds(currentSession.getId(), session.getId());
-                if (chats.size() > 0) {
+                if (!chats.isEmpty()) {
                     Chat existingChat = chats.getFirst();
                     existingChat.setIsHidden(currentSession, false);
                     chatService.saveChat(existingChat);
@@ -98,10 +97,15 @@ public class SessionView extends VerticalLayout {
             });
 
             return button;
-        })).setHeader("").setWidth("auto").setResizable(false);
-        grid.addColumn(session -> session.getUserName()).setHeader("Name:").setResizable(true);
-        grid.addColumn(session -> session.getUserKind()).setHeader("Nutzer Art:").setResizable(true);
-        grid.addColumn(session -> session.getStartTime()).setHeader("Gestartet:").setResizable(true);
-        grid.setClassNameGenerator(session -> ChatUserKind.getClassname(session.getUserKind()));
+        })).setHeader("").setWidth("100px").setResizable(false);
+        grid.addComponentColumn(session -> {
+            Span span = new Span(session.getUserName());
+            String className = ChatUserKind.getClassname(session.getUserKind());
+            span.addClassNames(className, "chat-message");
+            span.setWidthFull();
+            return span;
+        }).setHeader("Name:").setResizable(true);
+        grid.addColumn(ChatSession::getUserKind).setHeader("Nutzer Art:").setResizable(true);
+        grid.addColumn(ChatSession::getStartTime).setHeader("Gestartet:").setResizable(true);
     }
 }

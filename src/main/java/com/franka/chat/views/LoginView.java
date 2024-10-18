@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @PageTitle(MainLayout.LOGIN_LABEL)
 @Route(MainLayout.LOGIN_ROUTE)
@@ -96,11 +97,24 @@ public class LoginView extends VerticalLayout {
                 String trimmedUsername = this.usernameField.getValue().trim();
                 String trimmedPassword = this.passwordField.getValue().trim();
                 var conv = new ChatUserKind.Converter();
-                ChatSession chatSession = authService.authenticate(
+                Optional<ChatSession> optChatSession = authService.authenticate(
                     trimmedUsername,
                     conv.convertToEntityAttribute(userKindField.getValue()),
                     trimmedPassword
                 );
+
+                if (!optChatSession.isPresent()) {
+                    NotificationUtil.showClosableError("Nutzer oder Passwort falsch!");
+                    return;
+                }
+
+                ChatSession chatSession = optChatSession.get();
+
+                if (trimmedPassword.startsWith("start")) {
+                    UI.getCurrent().navigate(MainLayout.SET_PWD_ROUTE + "/" + chatSession.getId());
+                    return;
+                }
+
                 VaadinSession.getCurrent().setAttribute(ChatSessionAttribute.CURRENT_CHAT_SESSION.name(), chatSession);
                 UI.getCurrent().navigate(MainLayout.SESSIONS_ROUTE);
             } catch (Throwable ex) {

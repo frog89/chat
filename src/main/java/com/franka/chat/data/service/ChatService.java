@@ -62,6 +62,14 @@ public class ChatService {
                                   .collect(Collectors.toList());
   }
 
+  public Optional<ChatSession> findSessionById(Long sessionId) {
+    return sessionRepository.findById(sessionId);
+  }
+
+  public ChatSession saveSession(ChatSession session) {
+    return sessionRepository.save(session);
+  }
+
   @PostConstruct
   public void generateData() throws NoSuchAlgorithmException, InvalidKeySpecException {
     if (VaadinSession.getCurrent() != null) {
@@ -69,13 +77,14 @@ public class ChatService {
       return;
     }
 
-    //if (sessionRepository.count() > 0) {
-    //  return;
-    //}
+    boolean dataExists = sessionRepository.count() > 0;
+    if (dataExists) {
+      return;
+    }
 
     deleteAllData();
 
-    String passwordHash = CryptUtil.getHashString("p");
+    String passwordHash = CryptUtil.getHashString("start123");
     ChatSession frank = new ChatSession("Frank", ChatUserKind.MALE, passwordHash);
     frank.setUserRole(ChatUserRole.ADMIN);
     ChatSession klaudia = new ChatSession("Klaudia", ChatUserKind.FEMALE, passwordHash);

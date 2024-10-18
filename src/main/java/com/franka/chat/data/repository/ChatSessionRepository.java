@@ -10,7 +10,7 @@ import java.util.List;
 
 public interface ChatSessionRepository extends JpaRepository<ChatSession, Long> {
     @Query(value = "select s from ChatSession s where " +
-      "(s.userName = :userName or s.userName like concat('%', :userName, '-%')) and " +
+      "s.userName = :userName and " +
       "s.userKind = :userKind and " +
       "s.status = 'ACTIVE'")
     List<ChatSession> findForAuthentication(

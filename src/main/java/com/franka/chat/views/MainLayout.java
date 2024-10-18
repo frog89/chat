@@ -14,7 +14,6 @@ import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.html.Footer;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Header;
@@ -41,10 +40,12 @@ import java.util.List;
  * The main view is a top-level placeholder for other views.
  */
 //@PreserveOnRefresh
-@CssImport(value = "./themes/chat/session-grid.css")
 public class MainLayout extends AppLayout implements AfterNavigationObserver {
     public static final String LOGIN_LABEL = "Einloggen";
     public static final String LOGIN_ROUTE = "login";
+
+    public static final String SET_PWD_LABEL = "Passwort setzen";
+    public static final String SET_PWD_ROUTE = "password";
 
     public static final String INFO_ID = "@Info_ID@";
     public static final String INFO_LABEL = "Info";

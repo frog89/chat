@@ -35,15 +35,15 @@ vaadin-side-nav-item vaadin-horizontal-layout {
   gap: 3px;
 }
 
-vaadin-side-nav-item.user_male {
+vaadin-side-nav-item.user-male {
   color: blue;
 }
-vaadin-side-nav-item.user_female {
+vaadin-side-nav-item.user-female {
   color: orange;
 }
-vaadin-side-nav-item.user_couple {
+vaadin-side-nav-item.user-couple {
   color: green;
 }
-vaadin-side-nav-item.user_unknown {
+vaadin-side-nav-item.user-unknown {
   color: purple;
 }

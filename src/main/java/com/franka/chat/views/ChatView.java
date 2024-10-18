@@ -3,6 +3,7 @@ package com.franka.chat.views;
 import com.franka.chat.data.entity.Chat;
 import com.franka.chat.data.entity.ChatMessage;
 import com.franka.chat.data.entity.ChatSession;
+import com.franka.chat.data.entity.ChatUserKind;
 import com.franka.chat.data.model.ChatBroadcastInfo;
 import com.franka.chat.data.model.ChatSideNavItem;
 import com.franka.chat.data.service.ChatService;
@@ -10,8 +11,10 @@ import com.franka.chat.util.ChatBroadcasterUtil;
 import com.franka.chat.util.NotificationUtil;
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
@@ -27,13 +30,14 @@ import java.util.List;
 @PageTitle(MainLayout.CHAT_LABEL)
 @Route(value = MainLayout.CHAT_ROUTE + "/:chatId", layout = MainLayout.class)
 @PermitAll
+@CssImport(value = "./themes/chat/chat-grid.css")
 public class ChatView extends VerticalLayout implements BeforeEnterObserver {
-    private DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    private Grid<ChatMessage> grid = new Grid<>(ChatMessage.class);
+    private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private final Grid<ChatMessage> grid = new Grid<>(ChatMessage.class);
 
     private Chat chat;
 
-    private ChatService chatService;
+    private final ChatService chatService;
 
     public ChatView(ChatService chatService) {
         this.chatService = chatService;
@@ -109,8 +113,15 @@ public class ChatView extends VerticalLayout implements BeforeEnterObserver {
         this.grid.addThemeVariants(GridVariant.LUMO_COMPACT);
         this.grid.setSizeFull();
         this.grid.setColumns();
-        this.grid.addColumn(msg -> msg.getFromSession().getUserName()).setHeader("From").setWidth("12%").setResizable(true);
-        this.grid.addColumn(msg -> dateFormatter.format(msg.getDatetime())).setHeader("Date").setWidth("13%").setResizable(true);
-        this.grid.addColumn(ChatMessage::getMessage).setHeader("Message").setWidth("75%").setResizable(true);
+        grid.addComponentColumn(msg -> {
+            String user = msg.getFromSession().getUserName();
+            String dateTime = dateFormatter.format(msg.getDatetime());
+            String message = String.format("%s || %s || %s", user, dateTime, msg.getMessage());
+            Span span = new Span(message);
+            String className = ChatUserKind.getClassname(msg.getFromSession().getUserKind());
+            span.addClassNames(className, "chat-message", "wrap-text");
+            span.setWidthFull();
+            return span;
+        }).setHeader("Chat").setResizable(false);
     }
 }

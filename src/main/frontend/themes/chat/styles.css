@@ -1,4 +1,5 @@
-@import url('./main-layout.css');    html {
+@import url('./main-layout.css');
+html {
       --lumo-font-size: 1rem;
       --lumo-font-size-xxxl: 1.75rem;
       --lumo-font-size-xxl: 1.375rem;
@@ -38,4 +39,40 @@
 
 .signup-buttons vaadin-button {
   font-size: var(--lumo-font-size-xxs);
+}
+
+.user-male.session-item {
+  color: blue;
+}
+.user-female.session-item {
+  color: orange;
+}
+.user-couple.session-item {
+  color: green;
+}
+.user-unknown.session-item {
+  color: purple;
+}
+
+.user-male.chat-message {
+  color: blue;
+}
+.user-female.chat-message {
+  color: orange;
+}
+.user-couple.chat-message {
+  color: green;
+}
+.user-unknown.chat-message {
+  color: purple;
+}
+
+.wrap-text {
+    white-space: pre-wrap;
+}
+
+vaadin-grid vaadin-button {
+  --lumo-button-size: 0px;
+  height: 15px;
+  padding: 3px;
 }

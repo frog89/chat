@@ -24,6 +24,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class AuthService {
@@ -63,7 +64,7 @@ public class AuthService {
       return searchName;
     }
 
-    public ChatSession authenticate(String loginUserName, ChatUserKind userKind, String password) throws NoSuchAlgorithmException, InvalidKeySpecException {
+    public Optional<ChatSession> authenticate(String loginUserName, ChatUserKind userKind, String password) throws NoSuchAlgorithmException, InvalidKeySpecException {
         String passwordHash = CryptUtil.getHashString(password);
         String userName;
         List<ChatSession> existingChatSessions = chatSessionRepository.findForAuthentication(loginUserName, userKind);
@@ -79,12 +80,13 @@ public class AuthService {
             session = foundSession;
             userName = session.getUserName();
         } else {
-            userName = getNameNotInDb(loginUserName);
-            session = new ChatSession(userName, userKind, passwordHash);
-            chatSessionRepository.save(session);
+            return Optional.ofNullable(null);
+            //userName = getNameNotInDb(loginUserName);
+            //session = new ChatSession(userName, userKind, passwordHash);
+            //chatSessionRepository.save(session);
         }
         configureSecurity(userName);
-        return session;
+        return Optional.of(session);
     }
 
     private void configureSecurity(String userName) {
